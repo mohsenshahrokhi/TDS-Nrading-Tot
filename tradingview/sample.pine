@@ -1,0 +1,3 @@
+// Sample NDS Indicator
+indicator("NDS Sample", overlay=true)
+plot(close)

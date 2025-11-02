@@ -1,0 +1,1 @@
+print("NDS Server Ready")
