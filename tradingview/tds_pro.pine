@@ -1,0 +1,62 @@
+// @version=5
+indicator('TDS Pro Trading System', shorttitle='TDS Pro', overlay=true)
+
+// === تنظیمات TDS ===
+tds_length = input.int(50, 'TDS Cycle Length', minval=10, maxval=100)
+risk_level = input.float(1.0, 'Risk Level', minval=0.5, maxval=3.0)
+use_ai = input.bool(true, 'Enable AI Analysis')
+
+// === محاسبات اصلی TDS ===
+price_momentum = ta.roc(close, 1)
+volatility = ta.atr(14) / close * 100
+market_trend = ta.sma(close, 20) > ta.sma(close, 50)
+
+// === شناسایی سیگنال‌های TDS ===
+pivot_high = ta.pivothigh(high, 2, 2)
+pivot_low = ta.pivotlow(low, 2, 2)
+
+// === الگوریتم TDS ===
+buy_condition = pivot_low and market_trend and price_momentum > 0
+sell_condition = pivot_high and not market_trend and price_momentum < 0
+
+// === مدیریت ریسک ===
+position_size = risk_level * (ta.atr(14) / close) * 100
+
+// === رسم سیگنال‌ها ===
+plotshape(buy_condition, "TDS Buy", shape.triangleup, 
+          location.belowbar, color=color.green, size=size.normal,
+          text="TDS\nBUY")
+plotshape(sell_condition, "TDS Sell", shape.triangledown, 
+          location.abovebar, color=color.red, size=size.normal,
+          text="TDS\nSELL")
+
+// === هشدارهای اتوماتیک ===
+alertcondition(buy_condition, "TDS Buy Signal", 
+  "TDS سیگنال خرید: {{ticker}} - قیمت: {{close}}")
+alertcondition(sell_condition, "TDS Sell Signal", 
+  "TDS سیگنال فروش: {{ticker}} - قیمت: {{close}}")
+
+// === نمایش اطلاعات زنده ===
+var table info_table = table.new(position.top_right, 2, 6)
+
+if barstate.islast
+    table.cell(info_table, 0, 0, "🚀 TDS PRO", 
+               bgcolor=color.purple, text_color=color.white)
+    table.cell(info_table, 1, 0, "ACTIVE", 
+               bgcolor=color.green, text_color=color.white)
+    
+    table.cell(info_table, 0, 1, "Momentum:", text_color=color.blue)
+    table.cell(info_table, 1, 1, str.tostring(price_momentum, "#.#####"))
+    
+    table.cell(info_table, 0, 2, "Volatility:", text_color=color.orange)
+    table.cell(info_table, 1, 2, str.tostring(volatility, "#.##") + "%")
+    
+    table.cell(info_table, 0, 3, "Trend:", 
+               text_color=market_trend ? color.green : color.red)
+    table.cell(info_table, 1, 3, market_trend ? "BULL" : "BEAR")
+    
+    table.cell(info_table, 0, 4, "Position Size:", text_color=color.purple)
+    table.cell(info_table, 1, 4, str.tostring(position_size, "#.##") + "%")
+    
+    table.cell(info_table, 0, 5, "Signals:", text_color=color.gray)
+    table.cell(info_table, 1, 5, str.tostring(ta.cum(buy_condition or sell_condition ? 1 : 0)))
