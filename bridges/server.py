@@ -1,1 +1,1 @@
-print("NDS Server Ready")
+print("NDS Server Ready - Restarted")
